@@ -1,6 +1,6 @@
-# MailSender
+# PyCourrier
 
-PyCourier is a Python package that simplifies composing and sending emails using SMTP. This package allows you to connect to an SMTP server, set up email content (including plain text, HTML, and attachments), specify recipients, and send emails seamlessly.
+PyCourrier is a Python package that simplifies composing and sending emails using SMTP. This package allows you to connect to an SMTP server, set up email content (including plain text, HTML, and attachments), specify recipients, and send emails seamlessly.
 
 ## Features
 
@@ -11,10 +11,10 @@ PyCourier is a Python package that simplifies composing and sending emails using
 
 ## Installation
 
-You can install PyCourier using pip:
+You can install pycourrier using pip:
 
 ```bash
-pip install pycourier
+pip install pycourrier
 ```
 
 ## Usage
@@ -22,7 +22,7 @@ pip install pycourier
 Here's a quick guide on how to use MailSender:
 
 ```python
-from pycourier import MailSender
+from pycourrier import MailSender
 
 # Initialize MailSender with your SMTP server credentials
 mailer = MailSender(in_username='your_email@gmail.com', in_password='your_password')
@@ -57,7 +57,7 @@ Methods
 - send_all: Send the composed email to all recipients.
 
 ## Contribution
-Contributions to pycourier are welcome! If you encounter any issues or have suggestions for improvements, please open an issue on GitHub.
+Contributions to pycourrier are welcome! If you encounter any issues or have suggestions for improvements, please open an [issue on GitHub](https://github.com/mjiid/pycourrier/issues).
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
