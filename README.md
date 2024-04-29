@@ -29,7 +29,7 @@ with MailSender('your_email@gmail.com', 'your_generated_app_password') as mailSe
 
     # Set recipients
     recipients = ['Abdelmajiid.habouch@gmail.com']
-    mail_sender.set_recipients(recipients)
+    mailSender.set_recipients(recipients)
 
     # Set email message details
     in_subject='Hello from PyCourrier!',
@@ -39,10 +39,10 @@ with MailSender('your_email@gmail.com', 'your_generated_app_password') as mailSe
     attachment="path/to/file (optional)",
     filename="filename_for_the_attachment (optional)"
 
-    mail_sender.set_message(in_plaintext=plaintext_body, in_subject=in_subject, in_from=in_from, in_htmltext=in_htmltext, attachment=attachment, filename=filename)
+    mailSender.set_message(in_plaintext=plaintext_body, in_subject=in_subject, in_from=in_from, in_htmltext=in_htmltext, attachment=attachment, filename=filename)
 
     # Send the email to all recipients
-    mail_sender.send_all()
+    mailSender.send_all()
 ```
 
 ## Constructor Parameters
