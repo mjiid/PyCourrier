@@ -1,1 +1,0 @@
-from .MailSender import MailSender
