@@ -28,7 +28,7 @@ from PyCourrier import MailSender
 with MailSender('your_email@gmail.com', 'your_generated_app_password') as mailSender:
 
     # Set recipients
-    recipients = ['Abdelmajiid.habouch@gmail.com']
+    recipients = ['recipient1@gmail.com']
     mailSender.set_recipients(recipients)
 
     # Set email message details
