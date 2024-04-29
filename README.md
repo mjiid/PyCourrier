@@ -44,17 +44,17 @@ mailer.send_all()  # Send the email and disconnect
 ```
 
 ## Constructor Parameters
-- in_username: Your email address used for SMTP login.
-- in_password: Your Generated app password.
-- in_server: Tuple containing the SMTP server address and port (default is Gmail).
-- use_SSL: Boolean indicating whether to use SSL (True) or TLS (False, default) for the connection.
+- **in_username**: Your email address used for SMTP login.
+- **in_password**: Your Generated app password.
+- **in_server**: Tuple containing the SMTP server address and port (default is Gmail).
+- **use_SSL**: Boolean indicating whether to use SSL (True) or TLS (False, default) for the connection.
 Methods
-- set_message: Compose the email message with subject, plaintext, HTML content, and optional attachments.
-- set_recipients: Set the list of email recipients.
-- add_recipient: Add a single recipient to the list of recipients.
-- connect: Connect to the SMTP server.
-- disconnect: Disconnect from the SMTP server.
-- send_all: Send the composed email to all recipients.
+- **set_message**: Compose the email message with subject, plaintext, HTML content, and optional attachments.
+- **set_recipients**: Set the list of email recipients.
+- **add_recipient**: Add a single recipient to the list of recipients.
+- **connect**: Connect to the SMTP server.
+- **disconnect**: Disconnect from the SMTP server.
+- **send_all**: Send the composed email to all recipients.
 
 ## Contribution
 Contributions to pycourrier are welcome! If you encounter any issues or have suggestions for improvements, please open an [issue on GitHub](https://github.com/mjiid/pycourrier/issues).
