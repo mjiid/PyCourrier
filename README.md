@@ -45,7 +45,7 @@ mailer.send_all()  # Send the email and disconnect
 
 ## Constructor Parameters
 - in_username: Your email address used for SMTP login.
-- in_password: Your email account password.
+- in_password: Your Generated app password.
 - in_server: Tuple containing the SMTP server address and port (default is Gmail).
 - use_SSL: Boolean indicating whether to use SSL (True) or TLS (False, default) for the connection.
 Methods
