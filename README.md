@@ -29,7 +29,7 @@ mailer = MailSender(in_username='your_email@gmail.com', in_password='your_passwo
 
 # Set email message content
 mailer.set_message(
-    in_subject='Hello from MailSender!',
+    in_subject='Hello from PyCourrier!',
     in_plaintext='This is the plain text content of the email.',
     in_from='your_email@gmail.com',
     in_htmltext='<p>This is the HTML content of the email.</p>',
