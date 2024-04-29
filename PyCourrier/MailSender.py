@@ -3,8 +3,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+from contextlib import AbstractContextManager
 
-class MailSender:
+class MailSender(AbstractContextManager):
     """
     A class that facilitates composing and sending emails via SMTP.
 
@@ -18,9 +19,16 @@ class MailSender:
         self.password = in_password
         self.server_name, self.server_port = in_server
         self.use_SSL = use_SSL
-        self.smtpserver = smtplib.SMTP_SSL(self.server_name, self.server_port) if self.use_SSL else smtplib.SMTP(self.server_name, self.server_port)
+        self.smtpserver = None
         self.connected = False
         self.recipients = []
+
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.disconnect()
 
     def __str__(self):
         return f"MailSender connected to {self.server_name}:{self.server_port}, Connected: {self.connected}"
@@ -72,18 +80,25 @@ class MailSender:
     def connect(self):
         """Connect to the SMTP server."""
         try:
-            self.smtpserver.starttls() if not self.use_SSL else None
+            if self.use_SSL:
+                self.smtpserver = smtplib.SMTP_SSL(self.server_name, self.server_port)
+            else:
+                self.smtpserver = smtplib.SMTP(self.server_name, self.server_port)
+                self.smtpserver.starttls()
+
             self.smtpserver.login(self.username, self.password)
             self.connected = True
             print(f"Connected to {self.server_name}")
-        except smtplib.SMTPException as error:
-            print(f"SMTP Error: {error}")
+        except (smtplib.SMTPException, ConnectionError) as error:
             self.connected = False
+            raise ConnectionError(f"Failed to connect to {self.server_name}: {error}")
+
 
     def disconnect(self):
         """Disconnect from the SMTP server."""
-        self.smtpserver.quit()
-        self.connected = False
+        if self.smtpserver:
+            self.smtpserver.quit()
+            self.connected = False
 
     def send_all(self, close_connection=True):
         """Send the email to all recipients."""
@@ -99,6 +114,3 @@ class MailSender:
 
         print("All messages sent")
 
-        if close_connection:
-            self.disconnect()
-            print("Connection closed")

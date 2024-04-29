@@ -24,25 +24,25 @@ Here's a quick guide on how to use MailSender:
 ```python
 from PyCourrier import MailSender
 
-# Initialize MailSender with your SMTP server credentials
-mailer = MailSender(in_username='your_email@gmail.com', in_password='your_password')
+# Create a MailSender instance within a context manager
+with MailSender('your_email@gmail.com', 'your_generated_app_password') as mailSender:
 
-# Set email message content
-mailer.set_message(
+    # Set recipients
+    recipients = ['Abdelmajiid.habouch@gmail.com']
+    mail_sender.set_recipients(recipients)
+
+    # Set email message details
     in_subject='Hello from PyCourrier!',
     in_plaintext='This is the plain text content of the email.',
-    in_from='your_email@gmail.com',
-    in_htmltext='<p>This is the HTML content of the email.</p>',
-    attachment="path/to/file",
-    filename="filename_for_the_attachment"
-)
+    in_from='your_email@gmail.com (optioanl)',
+    in_htmltext='<p>This is the HTML content of the email.</p> (optional)',
+    attachment="path/to/file (optional)",
+    filename="filename_for_the_attachment (optional)"
 
-# Add recipients
-mailer.set_recipients(['recipient1@example.com', 'recipient2@example.com'])
+    mail_sender.set_message(in_plaintext=plaintext_body, in_subject=in_subject, in_from=in_from, in_htmltext=in_htmltext, attachment=attachment, filename=filename)
 
-# Send the email to all recipients
-mailer.connect()  # Connect to the SMTP server
-mailer.send_all()  # Send the email and disconnect
+    # Send the email to all recipients
+    mail_sender.send_all()
 ```
 
 ## Constructor Parameters
