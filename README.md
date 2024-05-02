@@ -52,19 +52,19 @@ if __name__ == "__main__":
 ```
 
 ## Parameters:
-    - **in_username**: Your email address used for SMTP login.
-    - **in_password**: Your generated app password for SMTP login.
-    - **in_server**: Tuple containing the SMTP server address and port (default is Gmail).
-    - **use_SSL**: Boolean indicating whether to use SSL (True) or TLS (False, default) for the connection.
+- **in_username**: Your email address used for SMTP login.
+- **in_password**: Your generated app password for SMTP login.
+- **in_server**: Tuple containing the SMTP server address and port (default is Gmail).
+- **use_SSL**: Boolean indicating whether to use SSL (True) or TLS (False, default) for the connection.
 
 ## Methods:
-    - **set_message**: Compose the email message with subject, plaintext, and HTML content.
-    - **add_attachment**: Add an attachment to the email.
-    - **set_recipients**: Set the list of email recipients.
-    - **connect**: Connect to the SMTP server.
-    - **disconnect**: Disconnect from the SMTP server.
-    - **send_all_async**: Send the composed email to all recipients asynchronously.
-    - **send_email**: Send the composed email to a specific recipient.
+- **set_message**: Compose the email message with subject, plaintext, and HTML content.
+- **add_attachment**: Add an attachment to the email.
+- **set_recipients**: Set the list of email recipients.
+- **connect**: Connect to the SMTP server.
+- **disconnect**: Disconnect from the SMTP server.
+- **send_all_async**: Send the composed email to all recipients asynchronously.
+- **send_email**: Send the composed email to a specific recipient.
 
 ## Contribution
 Contributions to PyCourrier are welcome! If you encounter any issues or have suggestions for improvements, please open an [issue on GitHub](https://github.com/mjiid/PyCourrier/issues).
