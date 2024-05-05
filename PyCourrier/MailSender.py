@@ -126,30 +126,27 @@ class MailSender(AbstractContextManager):
             logging.error("Message not set. Please set the message before sending.")
             raise ValueError("Message not set.")
 
-        try:
-            # Set the 'To' header with all recipients
-            self.msg['To'] = ", ".join(self.recipients)
-
-            tasks = []
-            loop = get_event_loop()
-
-            for recipient in self.recipients:
-                task = loop.create_task(self.send_email(recipient))
-                tasks.append(task)
-
-            await gather(*tasks)
-            logging.info("All messages sent")
-        except smtplib.SMTPException as error:
-            logging.error(f"Failed to send mail: {error}")
-            raise
+        tasks = [self.send_email(recipient) for recipient in self.recipients]
+        await gather(*tasks)
+        logging.info("All messages sent")
 
     async def send_email(self, recipient):
-        """Send the email to a recipient."""
+        """Send the email to a single recipient."""
         try:
             logging.info(f"Sending to {recipient}")
-            
+
+            # Create a new message for each recipient to set the 'To' header individually
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = self.msg['Subject']
+            msg['From'] = self.msg['From']
+            msg['To'] = recipient  # Set the recipient's email
+
+            # Attach the plain and HTML parts from the original message
+            for part in self.msg.get_payload():
+                msg.attach(part)
+
             # Convert the message to a string and then send it
-            self.smtpserver.sendmail(self.username, recipient, self.msg.as_string())
+            self.smtpserver.sendmail(self.username, recipient, msg.as_string())
         except smtplib.SMTPException as error:
             logging.error(f"Failed to send mail to {recipient}: {error}")
             raise
