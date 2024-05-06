@@ -22,7 +22,8 @@ pip install PyCourrier
 Here's a quick guide on how to use MailSender:
 
 ```python
-from PyCourrier import MailSender, run
+from PyCourrier import MailSender
+from asyncio import run
 
 async def main():
     # Create a MailSender instance within a context manager

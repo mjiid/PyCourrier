@@ -5,7 +5,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 from contextlib import AbstractContextManager
 import logging
-from asyncio import gather, get_event_loop, run
+from asyncio import gather
 
 
 # Setup logging
@@ -150,3 +150,4 @@ class MailSender(AbstractContextManager):
         except smtplib.SMTPException as error:
             logging.error(f"Failed to send mail to {recipient}: {error}")
             raise
+
