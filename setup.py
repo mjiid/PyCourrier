@@ -5,9 +5,9 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name='PyCourrier',
-    version='0.1.7',
+    version='0.2',
     packages=find_packages(),
-    description='A simple email sender utility',
+    description='A Python package for sending emails using various SMTP services',
     author='Abdelmajid Habouch',
     author_email='Habush1610@gmail.com',
     url='https://github.com/mjiid/PyCourrier',
@@ -15,12 +15,18 @@ setup(
     install_requires=[
         'asyncio'
     ],
+    extras_require={
+        'dev': [
+            'pytest',
+            'sphinx',
+            'sphinx_rtd_theme'
+        ]
+    },
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Topic :: Communications :: Email',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',

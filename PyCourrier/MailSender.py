@@ -1,12 +1,14 @@
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
 from contextlib import AbstractContextManager
 import logging
-from asyncio import gather
+from asyncio import gather, to_thread
+from typing import List, Tuple, Optional, Dict, Union
 
+from .config import EMAIL_SERVICES
+from .exceptions import ConnectionError, MessageError
+from .utils import attach_file
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -17,19 +19,31 @@ class MailSender(AbstractContextManager):
 
     :param in_username: Username for mail server login
     :param in_password: Password for mail server login
-    :param in_server: SMTP server to connect to (default is Gmail)
+    :param in_service: Name of the email service provider (e.g., 'gmail')
     :param use_SSL: Use SSL (True) or TLS (False, default) for connection
     """
-    def __init__(self, in_username, in_password, in_server=("smtp.gmail.com", 587), use_SSL=False):
+    def __init__(self, in_username: str, in_password: str, 
+                 in_service: str = 'gmail', use_SSL: bool = False):
+        if in_service not in EMAIL_SERVICES:
+            raise ValueError(f"Unsupported email service: {in_service}")
         self.username = in_username
         self.password = in_password
-        self.server_name, self.server_port = in_server
+        self.server_name, self.server_port = EMAIL_SERVICES[in_service]
         self.use_SSL = use_SSL
-        self.smtpserver = None
+        self.smtpserver: Optional[smtplib.SMTP] = None
         self.connected = False
-        self.recipients = []
-        self.attachments = []
-        self.msg = None
+        self.recipients: List[str] = []
+        self.cc_recipients: List[str] = []
+        self.bcc_recipients: List[str] = []
+        self.attachments: List[Dict[str, str]] = []
+        self.msg: Optional[MIMEMultipart] = None
+
+    async def __aenter__(self):
+        await to_thread(self.connect)
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await to_thread(self.disconnect)
 
     def __enter__(self):
         self.connect()
@@ -49,7 +63,7 @@ class MailSender(AbstractContextManager):
 
             self.smtpserver.login(self.username, self.password)
             self.connected = True
-            logging.info(f"Connected to {self.server_name}")
+            logging.info(f"Connected to {self.server_name} on port {self.server_port}")
         except (smtplib.SMTPException, ConnectionError) as error:
             self.connected = False
             logging.error(f"Failed to connect to {self.server_name}: {error}")
@@ -60,13 +74,14 @@ class MailSender(AbstractContextManager):
         if self.smtpserver:
             try:
                 self.smtpserver.quit()
-            except Exception as e:
+                logging.info("Disconnected from the SMTP server.")
+            except smtplib.SMTPException as e:
                 logging.warning(f"Error disconnecting from SMTP server: {e}")
             finally:
                 self.connected = False
-                logging.info("Disconnected.")
 
-    def set_message(self, in_subject="", in_from=None, in_plaintext=None, in_htmltext=None):
+    def set_message(self, in_subject: str = "", in_from: Optional[str] = None, 
+                    in_plaintext: Optional[str] = None, in_htmltext: Optional[str] = None):
         """
         Compose an email message.
 
@@ -75,46 +90,58 @@ class MailSender(AbstractContextManager):
         :param in_from: Sender address
         :param in_htmltext: HTML version of the email body
         """
+        if not (in_plaintext or in_htmltext):
+            raise MessageError("Either plaintext or HTML text must be provided for the email body.")
+
         self.msg = MIMEMultipart('alternative')
         self.msg['Subject'] = in_subject
         self.msg['From'] = in_from or self.username
 
         if in_plaintext:
-            self.msg.attach(MIMEText(in_plaintext, 'plain'))
+            part1 = MIMEText(in_plaintext, 'plain')
+            self.msg.attach(part1)
         if in_htmltext:
-            self.msg.attach(MIMEText(in_htmltext, 'html'))
+            part2 = MIMEText(in_htmltext, 'html')
+            self.msg.attach(part2)
 
-        # Include an attachment if specified
-        for attachment in self.attachments:
-            try:
-                with open(attachment['path'], 'rb') as f:
-                    part = MIMEBase('application', 'octet-stream')
-                    part.set_payload(f.read())
-                    encoders.encode_base64(part)
-                    part.add_header(
-                        'Content-Disposition', 
-                        f'attachment; filename={attachment["filename"]}'
-                    )
-                    self.msg.attach(part)
-            except IOError as e:
-                logging.error(f"Failed to attach file {attachment['path']}: {e}")
-                raise
 
-    def add_attachment(self, path, filename):
-        """Add an attachment"""
+    def add_attachment(self, path: str, filename: str):
+        """Add an attachment."""
         self.attachments.append({'path': path, 'filename': filename})
+        logging.info(f"Attachment added: {filename}")
 
-    def set_recipients(self, in_recipients):
+    def set_recipients(self, in_recipients: Union[List[str], Tuple[str, ...]], 
+                       cc_recipients: Optional[Union[List[str], Tuple[str, ...]]] = None, 
+                       bcc_recipients: Optional[Union[List[str], Tuple[str, ...]]] = None):
         """
         Set the recipients for the email.
 
         :param in_recipients: List of recipient email addresses
+        :param cc_recipients: List of CC recipient email addresses
+        :param bcc_recipients: List of BCC recipient email addresses
         """
         if isinstance(in_recipients, (list, tuple)):
-            self.recipients = in_recipients
+            self.recipients = list(in_recipients)
+            logging.info(f"Recipients set: {', '.join(self.recipients)}")
         else:
             logging.error("Recipients must be a list or tuple")
             raise TypeError("Recipients must be a list or tuple")
+        
+        if cc_recipients:
+            if isinstance(cc_recipients, (list, tuple)):
+                self.cc_recipients = list(cc_recipients)
+                logging.info(f"CC recipients set: {', '.join(self.cc_recipients)}")
+            else:
+                logging.error("CC recipients must be a list or tuple")
+                raise TypeError("CC recipients must be a list or tuple")
+        
+        if bcc_recipients:
+            if isinstance(bcc_recipients, (list, tuple)):
+                self.bcc_recipients = list(bcc_recipients)
+                logging.info(f"BCC recipients set: {', '.join(self.bcc_recipients)}")
+            else:
+                logging.error("BCC recipients must be a list or tuple")
+                raise TypeError("BCC recipients must be a list or tuple")
 
     async def send_all_async(self):
         """Send the email to all recipients."""
@@ -124,30 +151,37 @@ class MailSender(AbstractContextManager):
 
         if not self.msg:
             logging.error("Message not set. Please set the message before sending.")
-            raise ValueError("Message not set.")
+            raise MessageError("Message not set.")
 
-        tasks = [self.send_email(recipient) for recipient in self.recipients]
+        all_recipients = self.recipients + self.cc_recipients + self.bcc_recipients
+        tasks = [self.send_email(recipient) for recipient in all_recipients]
         await gather(*tasks)
         logging.info("All messages sent")
 
-    async def send_email(self, recipient):
+    async def send_email(self, recipient: str):
         """Send the email to a single recipient."""
         try:
             logging.info(f"Sending to {recipient}")
 
-            # Create a new message for each recipient to set the 'To' header individually
+            # Create a new message for each recipient to set the 'To', 'CC', and 'BCC' headers individually
             msg = MIMEMultipart('alternative')
             msg['Subject'] = self.msg['Subject']
             msg['From'] = self.msg['From']
-            msg['To'] = recipient  # Set the recipient's email
+            msg['To'] = recipient
+            msg['CC'] = ', '.join(self.cc_recipients) if self.cc_recipients else ''
+            msg['BCC'] = ', '.join(self.bcc_recipients) if self.bcc_recipients else ''
 
             # Attach the plain and HTML parts from the original message
             for part in self.msg.get_payload():
                 msg.attach(part)
+            
+            # Attach any files
+            for attachment in self.attachments:
+                attach_file(msg, attachment['path'], attachment['filename'])
 
             # Convert the message to a string and then send it
-            self.smtpserver.sendmail(self.username, recipient, msg.as_string())
+            self.smtpserver.sendmail(self.username, [recipient] + self.cc_recipients + self.bcc_recipients, msg.as_string())
+            logging.info(f"Mail sent to {recipient}")
         except smtplib.SMTPException as error:
             logging.error(f"Failed to send mail to {recipient}: {error}")
             raise
-

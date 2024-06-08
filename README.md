@@ -1,17 +1,16 @@
 # PyCourrier
 
-PyCourrier is a Python package that simplifies composing and sending emails using SMTP. This package allows you to connect to an SMTP server, set up email content (including plain text, HTML, and attachments), specify recipients, and send emails seamlessly.
+PyCourrier is a Python package for sending emails using various SMTP services.
 
 ## Features
 
-- Connect to SMTP servers (supports both SSL and TLS connections).
-- Compose emails with plaintext, HTML, and attachments.
-- Set multiple recipients for each email.
-- Easily send emails to all recipients with a single function call.
+- Support for multiple email services (Gmail, Yahoo, Outlook, etc.) (Check the `config.py` file for more details)
+- Easy to use context manager for connecting and disconnecting from the SMTP server
+- Support for plain text and HTML email bodies
+- Attachment support
+- Asynchronous email sending
 
 ## Installation
-
-You can install PyCourrier using pip:
 
 ```bash
 pip install PyCourrier
@@ -22,40 +21,47 @@ pip install PyCourrier
 Here's a quick guide on how to use MailSender:
 
 ```python
+import asyncio
 from PyCourrier import MailSender
-from asyncio import run
 
 async def main():
-    # Create a MailSender instance within a context manager
-    with MailSender('your_email@gmail.com', 'your_generated_app_password') as sender:
+    # Initialize MailSender with your credentials and email service
+    async with MailSender(in_username='your_email@example.com', 
+                          in_password='your_app_password', 
+                          in_service='gmail', 
+                          use_SSL=True) as mail_sender:
+        
+        # Compose the email message
+        mail_sender.set_message(
+            in_subject='Test Email',
+            in_from='your_email@example.com',
+            in_plaintext='This is a test email with an attachment.',
+            in_htmltext='<html><body><h1>This is a test email with an attachment.</h1></body></html>'
+        )
+
+        # Add attachments
+        mail_sender.add_attachment(path='/path/to/your/file.txt', filename='file.txt')
+        mail_sender.add_attachment(path='/path/to/another/file.pdf', filename='file.pdf')
 
         # Set recipients
-        recipients = ['recipient1@gmail.com', 'recipient2@gmail.com', 'recipient3@gmail.com']
-        sender.set_recipients(recipients)
+        mail_sender.set_recipients(
+            in_recipients=['recipient1@example.com', 'recipient2@example.com'],
+            cc_recipients=['cc1@example.com'], # Optional (None by default)
+            bcc_recipients=['bcc1@example.com'] # Optional (None by default)
+        )
 
-        # Set email message details
-        in_subject='Hello from PyCourrier!'
-        in_plaintext='This is the plain text content of the email.'
-        in_htmltext='<p>This is the HTML content of the email.</p> (optional)'
+        # Send the email to all recipients
+        await mail_sender.send_all_async()
 
-        # Add attachments (optional)
-        sender.add_attachment('path/to/attachment', 'filename')
-
-        # set the message
-        sender.set_message(in_plaintext=in_plaintext, in_subject=in_subject, in_htmltext=in_htmltext)
-        await sender.send_all_async()
-
-
-# Run the async main function
-if __name__ == "__main__":
-    run(main())
+# Run the main function
+asyncio.run(main())
 
 ```
 
 ## Parameters:
 - **in_username**: Your email address used for SMTP login.
 - **in_password**: Your generated app password for SMTP login.
-- **in_server**: Tuple containing the SMTP server address and port (default is Gmail).
+- **in_server**: Name of the email service provider (e.g., 'gmail', 'yahoo', 'outlook', or 'other'). Defaults to 'gmail'.
 - **use_SSL**: Boolean indicating whether to use SSL (True) or TLS (False, default) for the connection.
 
 ## Methods:
