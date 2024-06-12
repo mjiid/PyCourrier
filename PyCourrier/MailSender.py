@@ -1,10 +1,12 @@
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
 from contextlib import AbstractContextManager
 import logging
-from asyncio import gather, to_thread
+from asyncio import gather, run, to_thread
 from typing import List, Tuple, Optional, Dict, Union
+import os
 
 from .config import EMAIL_SERVICES
 from .exceptions import ConnectionError, MessageError
@@ -36,6 +38,7 @@ class MailSender(AbstractContextManager):
         self.cc_recipients: List[str] = []
         self.bcc_recipients: List[str] = []
         self.attachments: List[Dict[str, str]] = []
+        self.inline_images: List[Dict[str, str]] = []
         self.msg: Optional[MIMEMultipart] = None
 
     async def __aenter__(self):
@@ -104,11 +107,15 @@ class MailSender(AbstractContextManager):
             part2 = MIMEText(in_htmltext, 'html')
             self.msg.attach(part2)
 
-
     def add_attachment(self, path: str, filename: str):
         """Add an attachment."""
         self.attachments.append({'path': path, 'filename': filename})
         logging.info(f"Attachment added: {filename}")
+
+    def add_inline_image(self, path: str, cid: str, filename: str):
+        """Add an inline image."""
+        self.inline_images.append({'path': path, 'cid': cid, 'filename': filename})
+        logging.info(f"Inline image added with CID: {cid}, filename: {filename}")
 
     def set_recipients(self, in_recipients: Union[List[str], Tuple[str, ...]], 
                        cc_recipients: Optional[Union[List[str], Tuple[str, ...]]] = None, 
@@ -175,6 +182,14 @@ class MailSender(AbstractContextManager):
             for part in self.msg.get_payload():
                 msg.attach(part)
             
+            # Attach inline images
+            for image in self.inline_images:
+                with open(image['path'], 'rb') as img:
+                    mime_image = MIMEImage(img.read(), name=os.path.basename(image['filename']))
+                    mime_image.add_header('Content-ID', f"<{image['cid']}>")
+                    mime_image.add_header('Content-Disposition', 'inline', filename=image['filename'])
+                    msg.attach(mime_image)
+
             # Attach any files
             for attachment in self.attachments:
                 attach_file(msg, attachment['path'], attachment['filename'])

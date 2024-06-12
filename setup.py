@@ -13,7 +13,15 @@ setup(
     url='https://github.com/mjiid/PyCourrier',
     license='MIT',
     install_requires=[
-        'asyncio'
+        'asyncio',
+        'apscheduler',
+        'jinja2',
+        'requests',
+        'gnupg',
+        'sendgrid',
+        'gettext',
+        'babel',
+        'googletrans'
     ],
     extras_require={
         'dev': [

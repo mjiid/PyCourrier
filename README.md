@@ -43,6 +43,9 @@ async def main():
         mail_sender.add_attachment(path='/path/to/your/file.txt', filename='file.txt')
         mail_sender.add_attachment(path='/path/to/another/file.pdf', filename='file.pdf')
 
+        # Adding an inline image
+        mail_sender.add_inline_image('path/to/image.jpg', 'image1', 'image.jpg')
+
         # Set recipients
         mail_sender.set_recipients(
             in_recipients=['recipient1@example.com', 'recipient2@example.com'],
