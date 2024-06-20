@@ -28,22 +28,21 @@ async def main():
     # Initialize MailSender with your credentials and email service
     async with MailSender(in_username='your_email@example.com', 
                           in_password='your_app_password', 
-                          in_service='gmail', 
-                          use_SSL=True) as mail_sender:
+                          in_service='gmail') as mail_sender:
         
         # Compose the email message
         mail_sender.set_message(
-            in_subject='Test Email',
+            in_subject='Hello from PyCourrier!',
             in_from='your_email@example.com',
-            in_plaintext='This is a test email with an attachment.',
-            in_htmltext='<html><body><h1>This is a test email with an attachment.</h1></body></html>'
+            in_plaintext='This is a test email sent using PyCourrier',
+            in_htmltext='<html><body><h1>This is a test email sent using PyCourrier.</h1></body></html>'
         )
 
-        # Add attachments
+        # Add attachments (Optional)
         mail_sender.add_attachment(path='/path/to/your/file.txt', filename='file.txt')
         mail_sender.add_attachment(path='/path/to/another/file.pdf', filename='file.pdf')
 
-        # Adding an inline image
+        # Adding an inline image (Optional)
         mail_sender.add_inline_image('path/to/image.jpg', 'image1', 'image.jpg')
 
         # Set recipients
@@ -68,7 +67,7 @@ asyncio.run(main())
 - **use_SSL**: Boolean indicating whether to use SSL (True) or TLS (False, default) for the connection.
 
 ## Methods:
-- **set_message**: Compose the email message with subject, plaintext, and HTML content.
+- **set_message**: Compose the email message with subject, plaintext, and HTML content. (Please note either in_plaintext or in_htmltext must be provided. If both are given, the email client will typically display the HTML version.)
 - **add_attachment**: Add an attachment to the email.
 - **set_recipients**: Set the list of email recipients.
 - **connect**: Connect to the SMTP server.
