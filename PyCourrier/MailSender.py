@@ -63,7 +63,8 @@ class MailSender(AbstractContextManager):
         """Connect to the SMTP server."""
         try:
             if self.use_SSL:
-                self.smtpserver = smtplib.SMTP_SSL(self.server_name, self.server_port)
+                context = ssl.create_default_context()
+                self.smtpserver = smtplib.SMTP_SSL(self.server_name, self.server_port, context=context)
             else:
                 self.smtpserver = smtplib.SMTP(self.server_name, self.server_port)
                 self.smtpserver.starttls()
