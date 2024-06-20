@@ -1,6 +1,7 @@
 from email.mime.base import MIMEBase
 from email import encoders
 import logging
+import re
 
 def attach_file(msg, path: str, filename: str):
     """Attach a file to the email message."""
@@ -14,3 +15,7 @@ def attach_file(msg, path: str, filename: str):
     except IOError as e:
         logging.error(f"Failed to attach file {path}: {e}")
         raise
+
+def validate_email(email: str) -> bool:
+        pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+        return re.match(pattern, email) is not None

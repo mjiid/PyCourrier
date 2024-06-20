@@ -1,19 +1,23 @@
+from email.header import Header
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from contextlib import AbstractContextManager
 import logging
-from asyncio import gather, run, to_thread
+from asyncio import gather, to_thread
 from typing import List, Tuple, Optional, Dict, Union
 import os
+import ssl
+from email.utils import formataddr
 
 from .config import EMAIL_SERVICES
 from .exceptions import ConnectionError, MessageError
-from .utils import attach_file
+from .utils import attach_file, validate_email
 
 # Setup logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class MailSender(AbstractContextManager):
     """
@@ -98,7 +102,7 @@ class MailSender(AbstractContextManager):
 
         self.msg = MIMEMultipart('alternative')
         self.msg['Subject'] = in_subject
-        self.msg['From'] = in_from or self.username
+        self.msg['From'] = formataddr((str(Header(in_from or self.username, 'utf-8')), self.username))
 
         if in_plaintext:
             part1 = MIMEText(in_plaintext, 'plain')
@@ -127,28 +131,18 @@ class MailSender(AbstractContextManager):
         :param cc_recipients: List of CC recipient email addresses
         :param bcc_recipients: List of BCC recipient email addresses
         """
-        if isinstance(in_recipients, (list, tuple)):
-            self.recipients = list(in_recipients)
-            logging.info(f"Recipients set: {', '.join(self.recipients)}")
-        else:
-            logging.error("Recipients must be a list or tuple")
-            raise TypeError("Recipients must be a list or tuple")
-        
-        if cc_recipients:
-            if isinstance(cc_recipients, (list, tuple)):
-                self.cc_recipients = list(cc_recipients)
-                logging.info(f"CC recipients set: {', '.join(self.cc_recipients)}")
+        self._set_recipient_list(in_recipients, 'recipients')
+        self._set_recipient_list(cc_recipients, 'cc_recipients')
+        self._set_recipient_list(bcc_recipients, 'bcc_recipients')
+            
+    def _set_recipient_list(self, recipients: Optional[Union[List[str], Tuple[str, ...]]], attr_name: str):
+        if recipients:
+            if isinstance(recipients, (list, tuple)):
+                setattr(self, attr_name, [addr for addr in recipients if validate_email(addr)])
+                logger.info(f"{attr_name.capitalize()} set: {', '.join(getattr(self, attr_name))}")
             else:
-                logging.error("CC recipients must be a list or tuple")
-                raise TypeError("CC recipients must be a list or tuple")
-        
-        if bcc_recipients:
-            if isinstance(bcc_recipients, (list, tuple)):
-                self.bcc_recipients = list(bcc_recipients)
-                logging.info(f"BCC recipients set: {', '.join(self.bcc_recipients)}")
-            else:
-                logging.error("BCC recipients must be a list or tuple")
-                raise TypeError("BCC recipients must be a list or tuple")
+                logger.error(f"{attr_name.capitalize()} must be a list or tuple")
+                raise TypeError(f"{attr_name.capitalize()} must be a list or tuple")
 
     async def send_all_async(self):
         """Send the email to all recipients."""
