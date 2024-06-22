@@ -14,14 +14,6 @@ setup(
     license='MIT',
     install_requires=[
         'asyncio',
-        'apscheduler',
-        'jinja2',
-        'requests',
-        'gnupg',
-        'sendgrid',
-        'gettext',
-        'babel',
-        'googletrans'
     ],
     extras_require={
         'dev': [
